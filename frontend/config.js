@@ -5,7 +5,7 @@
 
 window.CIVIC_CONFIG = {
   // Your Render backend URL, no trailing slash. e.g. "https://civic-log-backend.onrender.com"
-  API_BASE: "http://localhost:8787",
+  API_BASE: "https://civic-log.onrender.com",
 
   // Project Settings → API → Project URL
   SUPABASE_URL: "https://uobskgshrkjjdkxmxtsw.supabase.co",
