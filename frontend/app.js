@@ -766,8 +766,17 @@
           <div class="meta">${escapeHtml(n.district)}${n.category ? ` · ${escapeHtml(n.category)}` : ''}</div>
           <div class="meta">${n.twitter_handle ? `@${escapeHtml(n.twitter_handle)}` : ''}</div>
           <div class="meta">${n.email ? escapeHtml(n.email) : ''}</div>
+          <button class="btn small outline" style="margin-top:10px;" data-assign-ngo="${n.id}">Assign to My Issue</button>
         </div>
       `).join('') : '<p>No NGOs configured for this selection yet.</p>';
+
+      container.querySelectorAll('[data-assign-ngo]').forEach((el) => {
+        el.addEventListener('click', () => {
+          const reportId = document.getElementById('ngoAssignReportId').value.trim();
+          if (!reportId) { alert('Enter the report ID first.'); return; }
+          prepareNgoApplication(reportId, el.getAttribute('data-assign-ngo'));
+        });
+      });
     } catch (err) {
       container.innerHTML = `<p>Could not load NGOs: ${escapeHtml(err.message)}</p>`;
     }
@@ -775,6 +784,53 @@
 
   document.getElementById('ngoDistrictFilter').addEventListener('change', loadNgos);
   document.getElementById('ngoCategoryFilter').addEventListener('change', loadNgos);
+
+  async function prepareNgoApplication(reportId, ngoId) {
+    const panel = document.getElementById('ngoApplicationPanel');
+    panel.innerHTML = '<div class="panel"><span class="spinner"></span> Preparing application…</div>';
+    try {
+      const { report, ngo, draft } = await apiJson(`/api/reports/${reportId}/ngo-application`, { method: 'POST', body: { ngoId } });
+
+      panel.innerHTML = `
+        <div class="draft-box">
+          <h4>Application to ${escapeHtml(ngo.name)} — for Report #${report.id}: ${escapeHtml(report.title)}</h4>
+          <input type="text" id="ngoAppSubject" value="${escapeHtml(draft.subject)}" style="margin-bottom:10px;">
+          <textarea id="ngoAppBody">${escapeHtml(draft.body)}</textarea>
+        </div>
+        <div class="draft-box">
+          <h4>X Post Draft (will tag @shakyatyagi${ngo.twitter_handle ? ` and @${escapeHtml(ngo.twitter_handle)}` : ''})</h4>
+          <textarea id="ngoAppXPost" style="min-height:80px;">${escapeHtml(draft.xPost)}</textarea>
+        </div>
+        <button class="btn block" id="ngoAppSendBtn">Confirm &amp; Send Application</button>
+        <div id="ngoAppResultBanner"></div>
+      `;
+
+      document.getElementById('ngoAppSendBtn').addEventListener('click', async () => {
+        const btn = document.getElementById('ngoAppSendBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner"></span> Sending…';
+        try {
+          const subject = document.getElementById('ngoAppSubject').value;
+          const body = document.getElementById('ngoAppBody').value;
+          const xPost = document.getElementById('ngoAppXPost').value;
+          const { notifications } = await apiJson(`/api/reports/${reportId}/ngo-application/send`, {
+            method: 'POST',
+            body: { ngoId, subject, body, xPost },
+          });
+          const emailNote = notifications.email.dryRun ? 'simulated (dry-run)' : (notifications.email.success ? 'sent' : `failed: ${notifications.email.error}`);
+          const xNote = notifications.x.dryRun ? 'simulated (dry-run)' : (notifications.x.success ? 'posted' : `failed: ${notifications.x.error}`);
+          document.getElementById('ngoAppResultBanner').innerHTML = `<div class="result-banner ok">Email ${emailNote}. X post ${xNote}.</div>`;
+          btn.style.display = 'none';
+        } catch (err) {
+          document.getElementById('ngoAppResultBanner').innerHTML = `<div class="result-banner warn">${escapeHtml(err.message)}</div>`;
+          btn.disabled = false;
+          btn.textContent = 'Confirm & Send Application';
+        }
+      });
+    } catch (err) {
+      panel.innerHTML = `<div class="panel"><p style="color:var(--red);">Could not prepare application: ${escapeHtml(err.message)}</p></div>`;
+    }
+  }
 
   // ---------------------------------------------------------------------
   // INIT

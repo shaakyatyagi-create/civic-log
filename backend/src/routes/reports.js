@@ -7,6 +7,9 @@ const openai = require('../services/openai');
 const { generateCode, verifyAndConsumeCode } = require('../lib/code');
 const { sendInitialNotifications, escalateUnsolved, requestNgoHelp } = require('../lib/escalation');
 const { isDuplicate } = require('../lib/similarity');
+const { fetchImageBuffer } = require('../lib/media');
+const gmail = require('../services/gmail');
+const twitter = require('../services/twitter');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 8 * 1024 * 1024 } });
@@ -247,6 +250,67 @@ router.post('/:id/ngo-help', async (req, res, next) => {
     const { data: updated } = await supabase.from('reports').update({ ngo_manual_requested: true }).eq('id', req.params.id).select('*').single();
 
     res.json({ report: updated, notifications: result });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ---------- NGO APPLICATION (assign a specific NGO, review draft, then send) ----------
+router.post('/:id/ngo-application', async (req, res, next) => {
+  try {
+    const supabase = requireSupabase();
+    const { ngoId } = req.body || {};
+    if (!ngoId) return res.status(400).json({ error: 'ngoId is required.' });
+
+    const { data: report, error: reportErr } = await supabase.from('reports').select('*').eq('id', req.params.id).single();
+    if (reportErr || !report) return res.status(404).json({ error: 'Report not found' });
+
+    const { data: ngo, error: ngoErr } = await supabase.from('ngos').select('*').eq('id', ngoId).single();
+    if (ngoErr || !ngo) return res.status(404).json({ error: 'NGO not found' });
+
+    const draft = await openai.generateNgoApplication(report, ngo);
+
+    res.json({ report, ngo, draft });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/:id/ngo-application/send', async (req, res, next) => {
+  try {
+    const supabase = requireSupabase();
+    const { ngoId, subject, body, xPost } = req.body || {};
+    if (!ngoId || !subject || !body || !xPost) {
+      return res.status(400).json({ error: 'ngoId, subject, body, and xPost are required.' });
+    }
+
+    const { data: report, error: reportErr } = await supabase.from('reports').select('*').eq('id', req.params.id).single();
+    if (reportErr || !report) return res.status(404).json({ error: 'Report not found' });
+
+    const { data: ngo, error: ngoErr } = await supabase.from('ngos').select('*').eq('id', ngoId).single();
+    if (ngoErr || !ngo) return res.status(404).json({ error: 'NGO not found' });
+
+    const image = report.image_url ? await fetchImageBuffer(report.image_url) : null;
+    const attachment = image ? { ...image, filename: `report-${report.id}.jpg` } : null;
+
+    const emailResult = await gmail.sendEmail({
+      to: 'shaakyatyagi@gmail.com',
+      cc: ngo.email || undefined,
+      subject,
+      body,
+      attachment,
+    });
+
+    const handles = [...new Set(['shakyatyagi', ngo.twitter_handle].filter(Boolean))];
+    const xText = `${xPost} ${handles.map((h) => `@${h}`).join(' ')}`;
+    const xResult = await twitter.postTweet(xText, attachment);
+
+    await supabase.from('notifications_log').insert([
+      { report_id: report.id, channel: 'email', kind: 'ngo', recipient: 'shaakyatyagi@gmail.com', payload: body, success: emailResult.success, error: emailResult.error },
+      { report_id: report.id, channel: 'x', kind: 'ngo', recipient: handles.map((h) => `@${h}`).join(' '), payload: xResult.text, success: xResult.success, error: xResult.error },
+    ]);
+
+    res.json({ notifications: { email: emailResult, x: xResult } });
   } catch (err) {
     next(err);
   }

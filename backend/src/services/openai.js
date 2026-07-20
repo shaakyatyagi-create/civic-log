@@ -159,4 +159,70 @@ async function generateEscalationClause(report) {
   return completion.choices[0].message.content.trim();
 }
 
-module.exports = { analyzeReport, generateEscalationClause, SEVERITIES };
+const NGO_APPLICATION_SCHEMA = {
+  name: 'ngo_application',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    properties: {
+      email_subject: { type: 'string' },
+      email_body: { type: 'string' },
+      x_post: { type: 'string', description: 'Under 240 characters, ready to post as-is, no @mentions (those are appended separately).' },
+    },
+    required: ['email_subject', 'email_body', 'x_post'],
+  },
+  strict: true,
+};
+
+function fallbackNgoApplication(report, ngo) {
+  return {
+    subject: `NGO Support Requested: ${report.title} (Report #${report.id})`,
+    body: `Dear ${ngo.name},
+
+We are reaching out on behalf of a citizen who filed the following civic grievance and would benefit from your organization's support.
+
+Title: ${report.title}
+Category: ${report.category}
+District: ${report.district}
+Location: ${report.area} (${report.ward})
+Description: ${report.description}
+
+Any assistance you can provide — advocacy, community pressure, or direct support — would be greatly appreciated.
+
+Regards,
+Civic Log Platform [DRY RUN]`,
+    xPost: `Requesting support from ${ngo.name} for report #${report.id}: ${report.title} in ${report.district}. [DRY RUN]`,
+  };
+}
+
+async function generateNgoApplication(report, ngo) {
+  if (!client) {
+    return fallbackNgoApplication(report, ngo);
+  }
+
+  const completion = await client.chat.completions.create({
+    model: MODEL,
+    messages: [
+      { role: 'system', content: 'You write formal, respectful outreach letters and short public X posts asking a specific NGO to support a specific civic grievance. Respond using the provided JSON schema.' },
+      {
+        role: 'user',
+        content: `Write a formal application email addressed to "${ngo.name}" asking them to support this unresolved civic issue, and a short public X post (under 240 chars) announcing that this NGO has been asked to help.
+
+Report #${report.id}
+Title: ${report.title}
+Category: ${report.category}
+District: ${report.district}
+Location: ${report.area} (${report.ward})
+Severity: ${report.ai_severity || report.citizen_severity}
+Description: ${report.description}`,
+      },
+    ],
+    response_format: { type: 'json_schema', json_schema: NGO_APPLICATION_SCHEMA },
+    temperature: 0.4,
+  });
+
+  const parsed = JSON.parse(completion.choices[0].message.content);
+  return { subject: parsed.email_subject, body: parsed.email_body, xPost: parsed.x_post };
+}
+
+module.exports = { analyzeReport, generateEscalationClause, generateNgoApplication, SEVERITIES };
