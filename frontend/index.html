@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Civic Log — Grievance Reporting Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ============ NAVBAR ============ -->
+  <nav id="navbar">
+    <div class="logo">CIVIC<span>LOG/01</span></div>
+    <button id="navtoggle">MENU</button>
+    <div id="navlinks">
+      <button class="navlink active" data-page="home">Home</button>
+      <button class="navlink" data-page="report">Report</button>
+      <button class="navlink" data-page="issues">Issue Log</button>
+      <button class="navlink" data-page="insights">Hotspots &amp; Dashboard</button>
+      <button class="navlink" data-page="forum">Forum</button>
+      <button class="navlink" data-page="about">About</button>
+      <div class="dropdown-wrap" id="ddwrap">
+        <button class="navlink" id="ddtoggle">Contact ▾</button>
+        <div class="dropdown-menu">
+          <button class="navlink" data-page="contact" data-anchor="help">Help</button>
+          <button class="navlink" data-page="contact" data-anchor="ngo">Connect with an NGO</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ============ HOME ============ -->
+  <div class="page active" id="page-home">
+    <section id="hero">
+      <div class="hero-content">
+        <div class="hero-eyebrow"><span class="pulse"></span> LIVE CIVIC ISSUE FEED — <span id="liveCount">0</span> THREADS LOGGED</div>
+        <h1>SEE IT.<br>LOG IT.<br><em>FIX IT.</em></h1>
+        <p class="hero-sub">A public ledger for civic problems — landfill hazards, sewage overflow, contaminated water, broken drains. Report with a photo, track it by district, and push it to the people who can act.</p>
+        <div class="hero-ctas">
+          <button class="btn" data-page="report">File a Report →</button>
+          <button class="btn ghost" data-page="forum">Join Discussion Forum</button>
+        </div>
+        <div class="live-feed" id="liveFeed"></div>
+      </div>
+      <div class="legend-strip">
+        <div class="legend-item"><span class="dot red"></span><span class="lbl"><b>Critical</b>Chemical leaks, contaminated water, severe overflow</span></div>
+        <div class="legend-item"><span class="dot yellow"></span><span class="lbl"><b>Important</b>Open sewage, poor cleanliness, unresolved</span></div>
+        <div class="legend-item"><span class="dot green"></span><span class="lbl"><b>Minor</b>Small drain overflow, garbage buildup</span></div>
+        <div class="legend-item"><span class="dot blue"></span><span class="lbl"><b>Low priority</b>Seepage, cosmetic, low urgency</span></div>
+      </div>
+    </section>
+
+    <section class="section" style="background:#F4F6F4; border-top: 3px solid var(--ink);">
+      <div class="section-head">
+        <h2>The Civic Process</h2>
+        <span class="tag mono">STREAMLINED FLOW</span>
+      </div>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div class="panel" style="padding: 24px; box-shadow: 4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 10px;">01</div>
+          <h3 style="margin-bottom: 12px;">Capture &amp; Log</h3>
+          <p style="color: var(--ink-soft); line-height: 1.6;">Don't wait for others. Upload a clear image, define the locality, and mark the severity. Our AI cross-checks your photo against your report before it goes public.</p>
+        </div>
+        <div class="panel" style="padding: 24px; box-shadow: 4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 10px;">02</div>
+          <h3 style="margin-bottom: 12px;">Community Sync</h3>
+          <p style="color: var(--ink-soft); line-height: 1.6;">Local issues gain traction when neighbors verify them. Join the forum, share updates, and consolidate local demand for action.</p>
+        </div>
+        <div class="panel" style="padding: 24px; box-shadow: 4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size: 2rem; font-weight: 800; color: var(--accent); margin-bottom: 10px;">03</div>
+          <h3 style="margin-bottom: 12px;">Direct Escalation</h3>
+          <p style="color: var(--ink-soft); line-height: 1.6;">AI drafts a formal grievance email and a public X post, sent straight to the responsible authority — and escalated automatically if it stays unresolved.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ REPORT ============ -->
+  <div class="page" id="page-report">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>File a report</h2>
+        <span class="tag mono">PUBLIC ENTRY</span>
+      </div>
+
+      <div class="panel" id="reportFormPanel">
+        <form id="reportForm">
+          <div class="form-row">
+            <div class="field">
+              <label>Your Name</label>
+              <input type="text" id="rCitizenName" placeholder="Full Name" required>
+            </div>
+            <div class="field">
+              <label>Your Phone</label>
+              <input type="tel" id="rPhone" placeholder="10-digit number" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Select State / Region</label>
+              <select id="rState" required>
+                <option value="Uttar Pradesh">Uttar Pradesh</option>
+                <option value="Delhi NCR">Delhi NCR</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Select District</label>
+              <select id="rDistrict" required>
+                <option value="Ghaziabad">Ghaziabad</option>
+                <option value="Noida">Noida</option>
+                <option value="Agra">Agra</option>
+                <option value="Aligarh">Aligarh</option>
+                <option value="Lucknow">Lucknow</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Ward No. / Zone</label>
+              <input type="text" id="rWard" placeholder="e.g. Ward 14" required>
+            </div>
+            <div class="field">
+              <label>Area / Locality / Complete Address</label>
+              <input type="text" id="rArea" placeholder="e.g. Sector 12, near Ram Lila Ground" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Category</label>
+              <select id="rCategory" required>
+                <option value="Road">Road &amp; Transport</option>
+                <option value="Water">Water &amp; Sewage</option>
+                <option value="Garbage">Garbage &amp; Sanitation</option>
+                <option value="Electricity">Electricity &amp; Lighting</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Problem name / Topic</label>
+              <input type="text" id="rName" placeholder="e.g. Overflowing drain on Station Road" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Problem Severity Classification</label>
+              <select id="rSeverity" required>
+                <option value="Critical">Critical</option>
+                <option value="Important">Important (High)</option>
+                <option value="Minor">Minor (Medium)</option>
+                <option value="Low priority">Low priority</option>
+              </select>
+            </div>
+            <div class="field">
+              <label style="display: flex; align-items: center; gap: 8px; margin-top: 15px;">
+                <input type="checkbox" id="rNearFacility" style="width:18px; height:18px;">
+                Located near Hospital or School?
+              </label>
+            </div>
+          </div>
+          <div class="form-row">
+             <div class="field full">
+              <label>Detailed Description</label>
+              <textarea id="rDesc" placeholder="Describe the ongoing scenario in detail..." required></textarea>
+            </div>
+          </div>
+
+          <div class="form-group" style="margin: 20px 0;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size:12.5px; color:var(--ink-soft); text-transform:uppercase;">Attach Evidence Image:</label>
+            <label for="rImageFile" class="btn-outline" style="cursor: pointer; padding: 10px 15px; border: 2px solid var(--accent); display: inline-block; font-weight: bold;">
+              + Select Image Log
+            </label>
+            <span id="rFileNameDisplay" style="margin-left: 10px; font-size: 13px; color: var(--ink-soft);">No file chosen</span>
+            <input type="file" id="rImageFile" accept="image/*" style="display:none;" required>
+            <img id="rImagePreview" src="#" alt="Preview" style="display:none; max-width:200px; margin-top:15px; border: 2.5px solid var(--ink); border-radius: var(--radius-sm);">
+          </div>
+
+          <button type="submit" class="btn block" id="reportSubmitBtn">Submit for AI Analysis</button>
+        </form>
+      </div>
+
+      <div class="panel" id="reportResultPanel" style="display:none;"></div>
+    </section>
+  </div>
+
+  <!-- ============ ISSUE LOG ============ -->
+  <div class="page" id="page-issues">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>Public Issue Log</h2>
+        <span class="tag mono" id="issueCountTag">0 ENTRIES</span>
+      </div>
+
+      <div class="panel" style="margin-bottom: 20px; padding: 24px;">
+        <h3 style="margin-bottom: 15px; font-size: 16px;">Filter Log Entries</h3>
+        <div class="form-row">
+          <div class="field">
+            <label>State / Region</label>
+            <select id="filterState">
+              <option value="All">All States</option>
+              <option value="Uttar Pradesh">Uttar Pradesh</option>
+              <option value="Delhi NCR">Delhi NCR</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>District</label>
+            <select id="filterDistrict">
+              <option value="All">All Districts</option>
+              <option value="Ghaziabad">Ghaziabad</option>
+              <option value="Noida">Noida</option>
+              <option value="Agra">Agra</option>
+              <option value="Aligarh">Aligarh</option>
+              <option value="Lucknow">Lucknow</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>Category</label>
+            <select id="filterCategory">
+              <option value="All">All Categories</option>
+              <option value="Road">Road &amp; Transport</option>
+              <option value="Water">Water &amp; Sewage</option>
+              <option value="Garbage">Garbage &amp; Sanitation</option>
+              <option value="Electricity">Electricity &amp; Lighting</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Status</label>
+            <select id="filterStatus">
+              <option value="All">All</option>
+              <option value="unsolved">Unsolved</option>
+              <option value="solved">Solved</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="issueLogContainer"></div>
+    </section>
+  </div>
+
+  <!-- ============ HOTSPOTS + DASHBOARD (merged) ============ -->
+  <div class="page" id="page-insights">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>Hotspots &amp; Dashboard</h2>
+        <span class="tag mono">LIVE DATA</span>
+      </div>
+
+      <div class="subtabs">
+        <button class="subtab-btn active" data-subtab="hotspots">Hotspots</button>
+        <button class="subtab-btn" data-subtab="dashboard">Dashboard</button>
+      </div>
+
+      <div class="subtab-panel active" id="subtab-hotspots">
+        <div class="panel">
+          <h3 style="margin-bottom:20px;">Districts with Highest Complaints</h3>
+          <div id="hotspotContainer"></div>
+        </div>
+      </div>
+
+      <div class="subtab-panel" id="subtab-dashboard">
+        <div class="panel">
+          <h3 style="margin-bottom:6px;">Success Rate — District × Category</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Solved vs. unsolved counts for every district/category combination on record.</p>
+          <div id="dashboardMatrixContainer" style="overflow-x:auto;"></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:6px;">Category Hotspots</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Where each category's complaints are concentrated.</p>
+          <div id="dashboardCategoryHotspotContainer"></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:6px;">Overall Hotspot</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Districts ranked by total complaint volume and variety of different problem types.</p>
+          <div id="dashboardOverallHotspotContainer"></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:6px;">Best Civic Ministries — Per Category Leaderboard</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">80% and above is marked <b>Good</b>.</p>
+          <div id="dashboardCategoryLeaderboardContainer"></div>
+        </div>
+        <div class="panel">
+          <h3 style="margin-bottom:6px;">Overall District Leaderboard</h3>
+          <p style="font-size:13px;color:var(--ink-soft);margin:0 0 16px;">Average solve rate across all categories — the single overall success-rate ranking.</p>
+          <div id="dashboardOverallLeaderboardContainer"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ FORUM PAGE ============ -->
+  <div class="page" id="page-forum">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>Community Discussion Forum</h2>
+        <span class="tag mono" id="forumCountTag">0 THREADS</span>
+      </div>
+
+      <div class="panel" style="margin-bottom: 40px;">
+        <h3 style="font-size: 18px; margin-bottom: 15px;">Start a Discussion Thread</h3>
+        <div class="form-row">
+          <div class="field">
+            <label>Your Name</label>
+            <input type="text" id="fName" placeholder="Enter full name" required>
+          </div>
+          <div class="field">
+            <label>Your Locality / Address</label>
+            <input type="text" id="fAddress" placeholder="Enter complete locality" required>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field full">
+            <label>Describe the Civic Issue / Problem</label>
+            <textarea id="fProblem" placeholder="Provide complete visibility into the community grievance..." required></textarea>
+          </div>
+        </div>
+        <button type="button" class="btn" id="forumSubmitBtn">Publish Thread</button>
+      </div>
+
+      <div class="tabs">
+        <button class="tab-btn active">Active Civic Threads</button>
+      </div>
+      <div class="list-wrap" id="forumContainer"></div>
+    </section>
+  </div>
+
+  <!-- ============ CONTACT PAGE ============ -->
+  <div class="page" id="page-contact">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>Contact</h2>
+        <span class="tag mono">ESCALATION</span>
+      </div>
+
+      <div class="subtabs">
+        <button class="subtab-btn contact-subtab-btn active" data-subtab="help">Help</button>
+        <button class="subtab-btn contact-subtab-btn" data-subtab="ngo">Connect with an NGO</button>
+      </div>
+
+      <!-- HELP -->
+      <div class="subtab-panel active" id="subtab-help">
+        <div class="panel">
+          <h3 style="font-size:17px;margin-bottom:10px;">Need help using Civic Log?</h3>
+          <p style="color:var(--ink-soft);line-height:1.7;margin-bottom:18px;">Shakya Tyagi and Eakansh Khetarpal made this website. Contact them directly for platform support, data corrections, or partnership queries.</p>
+          <div style="display:flex; flex-direction:column; gap:10px; font-family:'JetBrains Mono',monospace; font-size:14px;">
+            <div><b>Shakya Tyagi:</b> shaakyatyagi@gmail.com</div>
+            <div><b>Eakansh Khetarpal:</b> eakansh67@gmail.com</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONNECT WITH AN NGO -->
+      <div class="subtab-panel" id="subtab-ngo">
+        <div class="panel">
+          <h3 style="font-size:17px;margin-bottom:10px;">Connect with a Local NGO</h3>
+          <div class="form-row">
+            <div class="field">
+              <label>District</label>
+              <select id="ngoDistrictFilter">
+                <option value="All">All Districts</option>
+                <option value="Ghaziabad">Ghaziabad</option>
+                <option value="Noida">Noida</option>
+                <option value="Agra">Agra</option>
+                <option value="Aligarh">Aligarh</option>
+                <option value="Lucknow">Lucknow</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Category</label>
+              <select id="ngoCategoryFilter">
+                <option value="All">All Categories</option>
+                <option value="Road">Road &amp; Transport</option>
+                <option value="Water">Water &amp; Sewage</option>
+                <option value="Garbage">Garbage &amp; Sanitation</option>
+                <option value="Electricity">Electricity &amp; Lighting</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="ngo-grid" id="ngoContainer" style="margin-top:16px;"></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ============ ABOUT / SUSTAINABILITY PAGE ============ -->
+  <div class="page" id="page-about">
+    <section class="section" style="padding-top:50px;">
+      <div class="section-head">
+        <h2>How We Sustain Ourselves</h2>
+        <span class="tag mono">MARKET VIABILITY</span>
+      </div>
+      <p style="max-width:720px;color:var(--ink-soft);line-height:1.7;margin-bottom:32px;">Civic Log stays free for citizens. Here's how the platform is designed to sustain itself financially without ever charging the public a subscription.</p>
+
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div class="panel" style="padding:24px;box-shadow:4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:10px;">01</div>
+          <h3 style="margin-bottom:12px;">Municipal Dashboard Licensing</h3>
+          <p style="color:var(--ink-soft);line-height:1.6;">Municipal corporations and state civic bodies license the analytics dashboard — hotspot maps, solve-rate leaderboards, resolution-time benchmarks — as a paid oversight tool for their own departments.</p>
+        </div>
+        <div class="panel" style="padding:24px;box-shadow:4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:10px;">02</div>
+          <h3 style="margin-bottom:12px;">CSR Sponsorships</h3>
+          <p style="color:var(--ink-soft);line-height:1.6;">Corporates fund a district or category cleanup drive through their CSR budget and get visible, provable impact tied to real before/after civic data — stronger ROI than a plaque.</p>
+        </div>
+        <div class="panel" style="padding:24px;box-shadow:4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:10px;">03</div>
+          <h3 style="margin-bottom:12px;">Contractor Lead Generation</h3>
+          <p style="color:var(--ink-soft);line-height:1.6;">Local plumbers, electricians, and waste-management companies pay per qualified lead matched to the relevant complaint category — a marketplace built on real, timestamped demand.</p>
+        </div>
+        <div class="panel" style="padding:24px;box-shadow:4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:10px;">04</div>
+          <h3 style="margin-bottom:12px;">Real-Estate &amp; Insurance Data Licensing</h3>
+          <p style="color:var(--ink-soft);line-height:1.6;">Anonymized, aggregated locality-level civic health data is licensed to real-estate portals and insurers for neighborhood scoring and risk modeling.</p>
+        </div>
+        <div class="panel" style="padding:24px;box-shadow:4px 4px 0 var(--ink);">
+          <div class="mono" style="font-size:1.6rem;font-weight:800;color:var(--accent);margin-bottom:10px;">05</div>
+          <h3 style="margin-bottom:12px;">Direct-Sold Local Advertising</h3>
+          <p style="color:var(--ink-soft);line-height:1.6;">Local businesses and NGOs buy placement directly on district and category pages — higher-yield than generic ad networks, and relevant to the citizens actually viewing them.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div>© 2026 Civic Log Project Open Ledger.</div>
+    <div>Emergency Portal Feed.</div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
