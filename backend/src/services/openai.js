@@ -27,9 +27,6 @@ const ANALYSIS_SCHEMA = {
 };
 
 function dryRunAnalysis(report) {
-  // Deterministic simulated analysis so the whole flow is testable before an
-  // OPENAI_API_KEY is configured. Mirrors the citizen's own input back with a
-  // clearly-labelled simulation notice.
   const level = SEVERITIES.includes(report.citizenSeverity) ? report.citizenSeverity : 'Minor';
   return {
     ai_severity: level,
@@ -133,11 +130,6 @@ Write the email as a formal, respectful grievance letter addressed to the munici
   };
 }
 
-/**
- * Generates the short descriptive clause appended after a deterministic
- * ALERT prefix (the literal prefix text is decided by lib/escalation.js per
- * the platform's fixed severity-keyword rules, not by the model).
- */
 async function generateEscalationClause(report) {
   if (!client) {
     return `${report.title} in ${report.district} (${report.area}) remains unresolved. [DRY RUN]`;

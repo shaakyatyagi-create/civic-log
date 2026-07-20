@@ -2,10 +2,6 @@ const { requireSupabase } = require('./supabase');
 
 const BUCKET = 'evidence';
 
-/**
- * Uploads a report photo (multer memory-storage buffer) to the public
- * "evidence" bucket and returns its public URL.
- */
 async function uploadEvidenceImage(file) {
   if (!file) return null;
 

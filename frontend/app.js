@@ -6,9 +6,6 @@
     ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY)
     : null;
 
-  // ---------------------------------------------------------------------
-  // API HELPERS
-  // ---------------------------------------------------------------------
   async function apiJson(path, { method = 'GET', body } = {}) {
     const res = await fetch(`${API_BASE}${path}`, {
       method,
@@ -38,9 +35,6 @@
     return new Date(iso).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
-  // ---------------------------------------------------------------------
-  // NAVIGATION
-  // ---------------------------------------------------------------------
   function showPage(target) {
     document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
     document.querySelectorAll('.navlink').forEach((nl) => nl.classList.remove('active'));
@@ -86,7 +80,6 @@
     if (e.target.id === 'ddtoggle') document.getElementById('ddwrap').classList.toggle('open');
   });
 
-  // Generic subtab wiring (Hotspots/Dashboard, Contact Help/Gov/NGO)
   document.querySelectorAll('.subtabs').forEach((tabsEl) => {
     tabsEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.subtab-btn');
@@ -104,9 +97,6 @@
     container.querySelectorAll('.subtab-panel').forEach((p) => p.classList.toggle('active', p.id === `subtab-${key}`));
   }
 
-  // ---------------------------------------------------------------------
-  // HOME — LIVE FEED
-  // ---------------------------------------------------------------------
   function addFeedItem(html) {
     const feed = document.getElementById('liveFeed');
     const div = document.createElement('div');
@@ -159,9 +149,6 @@
       .subscribe();
   }
 
-  // ---------------------------------------------------------------------
-  // REPORT PAGE
-  // ---------------------------------------------------------------------
   const rImageFile = document.getElementById('rImageFile');
   rImageFile.addEventListener('change', (e) => {
     const fileNameDisplay = document.getElementById('rFileNameDisplay');
@@ -317,9 +304,6 @@
     currentReport = null;
   }
 
-  // ---------------------------------------------------------------------
-  // ISSUE LOG
-  // ---------------------------------------------------------------------
   function severityClasses(sev) {
     if (sev === 'Critical') return { border: 'critical-border', dot: 'dot-red' };
     if (sev === 'Important') return { border: 'important-border', dot: 'dot-yellow' };
@@ -553,9 +537,6 @@
   document.getElementById('filterCategory').addEventListener('change', loadIssueLog);
   document.getElementById('filterStatus').addEventListener('change', loadIssueLog);
 
-  // ---------------------------------------------------------------------
-  // HOTSPOTS + DASHBOARD
-  // ---------------------------------------------------------------------
   function ratingTag(r) {
     const bg = r === 'Good' ? 'var(--accent-soft)' : r === 'Needs Improvement' ? '#fef3c7' : '#fee2e2';
     return `<span class="tag mono" style="margin-left:8px;background:${bg};">${r}</span>`;
@@ -647,9 +628,6 @@
     }
   }
 
-  // ---------------------------------------------------------------------
-  // FORUM
-  // ---------------------------------------------------------------------
   async function loadForum() {
     const container = document.getElementById('forumContainer');
     container.innerHTML = '<div style="padding:20px;"><span class="spinner"></span> Loading…</div>';
@@ -747,9 +725,6 @@
     }
   });
 
-  // ---------------------------------------------------------------------
-  // CONTACT — NGO
-  // ---------------------------------------------------------------------
   async function loadNgos() {
     const district = document.getElementById('ngoDistrictFilter').value;
     const category = document.getElementById('ngoCategoryFilter').value;
@@ -832,8 +807,5 @@
     }
   }
 
-  // ---------------------------------------------------------------------
-  // INIT
-  // ---------------------------------------------------------------------
   initLiveFeed();
 })();

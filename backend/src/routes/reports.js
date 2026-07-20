@@ -23,7 +23,6 @@ function required(body, fields) {
   }
 }
 
-// ---------- CREATE (analyze, don't send yet) ----------
 router.post('/', upload.single('image'), async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -108,7 +107,6 @@ router.post('/', upload.single('image'), async (req, res, next) => {
   }
 });
 
-// ---------- SEND (dispatch the initial email + X post) ----------
 router.post('/:id/send', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -140,7 +138,6 @@ router.post('/:id/send', async (req, res, next) => {
   }
 });
 
-// ---------- LIST ----------
 router.get('/', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -161,7 +158,6 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-// ---------- DETAIL ----------
 router.get('/:id', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -173,7 +169,6 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-// ---------- UPVOTE / CONFIRM ----------
 router.post('/:id/upvote', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -189,7 +184,6 @@ router.post('/:id/upvote', async (req, res, next) => {
   }
 });
 
-// ---------- STATUS TOGGLE (code-gated) ----------
 router.post('/:id/status', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -215,7 +209,6 @@ router.post('/:id/status', async (req, res, next) => {
       return res.json({ report: updated, escalation: null });
     }
 
-    // newStatus === 'unsolved'
     const { data: updated, error } = await supabase.from('reports')
       .update({ status: 'unsolved', unsolved_count: (report.unsolved_count || 0) + 1, resolved_at: null })
       .eq('id', req.params.id).select('*').single();
@@ -236,7 +229,6 @@ router.post('/:id/status', async (req, res, next) => {
   }
 });
 
-// ---------- MANUAL NGO HELP REQUEST (one-shot per report) ----------
 router.post('/:id/ngo-help', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -255,7 +247,6 @@ router.post('/:id/ngo-help', async (req, res, next) => {
   }
 });
 
-// ---------- NGO APPLICATION (assign a specific NGO, review draft, then send) ----------
 router.post('/:id/ngo-application', async (req, res, next) => {
   try {
     const supabase = requireSupabase();

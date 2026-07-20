@@ -1,21 +1,3 @@
-/**
- * One-time helper: mints a Gmail API refresh token for GOOGLE_REFRESH_TOKEN.
- *
- * Prereqs (see SETUP.md):
- *   1. Google Cloud Console → enable the "Gmail API".
- *   2. OAuth consent screen configured (External, test user = the Gmail
- *      account you're sending from, e.g. shaakyatyagi@gmail.com).
- *   3. Credentials → Create OAuth client ID → Application type: "Desktop app".
- *      Copy the Client ID and Client Secret.
- *
- * Usage:
- *   cd backend
- *   GOOGLE_CLIENT_ID=... GOOGLE_CLIENT_SECRET=... node scripts/get-gmail-token.js
- *   (or put GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET in backend/.env first)
- *
- * It opens a consent URL for you to visit in your browser, signed in as the
- * sending Gmail account, and captures the resulting refresh token.
- */
 require('dotenv').config();
 const http = require('http');
 const { URL } = require('url');

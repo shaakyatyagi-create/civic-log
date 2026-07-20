@@ -1,11 +1,6 @@
--- Civic Log — Supabase schema
--- Run this once in the Supabase SQL editor (Project → SQL Editor → New query → paste → Run).
--- Also create a PUBLIC storage bucket named "evidence" via Storage → New bucket
--- (Storage bucket creation isn't SQL — do it in the UI, see SETUP.md).
 
 create extension if not exists "pgcrypto";
 
--- ---------- REPORTS ----------
 create table if not exists reports (
   id bigint generated always as identity primary key,
   citizen_name text not null,
@@ -48,7 +43,6 @@ create table if not exists reports (
 create index if not exists idx_reports_state_district_category_status
   on reports (state, district, category, status);
 
--- ---------- DISTRICT CONTACTS ----------
 create table if not exists district_contacts (
   district text primary key,
   authority_email text not null,
@@ -63,10 +57,6 @@ insert into district_contacts (district, authority_email, escalation_email) valu
   ('Lucknow',   'shaakyatyagi@gmail.com', 'eakansh67@gmail.com')
 on conflict (district) do nothing;
 
--- ---------- NGOs ----------
--- Fabricated names for demo purposes. Contact fields point at the two real
--- accounts you control so tagging/emailing is fully functional right away.
--- Swap in real NGOs any time by editing rows here — no code changes needed.
 create table if not exists ngos (
   id bigint generated always as identity primary key,
   name text not null,
@@ -93,7 +83,6 @@ insert into ngos (name, district, twitter_handle, email) values
   ('Nawab City Sanitation Forum',  'Lucknow',   'shakyatyagi', 'shaakyatyagi@gmail.com')
 on conflict do nothing;
 
--- ---------- FORUM ----------
 create table if not exists forum_posts (
   id bigint generated always as identity primary key,
   name text not null,
@@ -103,7 +92,6 @@ create table if not exists forum_posts (
   created_at timestamptz not null default now()
 );
 
--- ---------- NOTIFICATIONS LOG ----------
 create table if not exists notifications_log (
   id bigint generated always as identity primary key,
   report_id bigint references reports(id) on delete cascade,
@@ -116,7 +104,6 @@ create table if not exists notifications_log (
   error text
 );
 
--- ---------- updated_at trigger ----------
 create or replace function set_updated_at() returns trigger as $$
 begin
   new.updated_at = now();
@@ -129,10 +116,6 @@ create trigger trg_reports_updated_at
   before update on reports
   for each row execute function set_updated_at();
 
--- ---------- ROW LEVEL SECURITY ----------
--- Public (anon) can read everything (needed for the live feed / dashboards /
--- issue log rendered straight from the browser). All writes go through the
--- backend using the service_role key, which bypasses RLS entirely.
 alter table reports enable row level security;
 alter table district_contacts enable row level security;
 alter table ngos enable row level security;
@@ -151,15 +134,10 @@ create policy "public read ngos" on ngos for select using (true);
 drop policy if exists "public read forum_posts" on forum_posts;
 create policy "public read forum_posts" on forum_posts for select using (true);
 
--- notifications_log is an internal audit trail — no public policy, so anon
--- gets zero access (service_role bypasses RLS for the backend's own reads).
 
--- ---------- REALTIME ----------
--- Enable realtime replication for the live home-page feed.
 alter publication supabase_realtime add table reports;
 alter publication supabase_realtime add table forum_posts;
 
--- ---------- PHASE 2 MIGRATIONS (safe to re-run) ----------
 alter table reports add column if not exists ai_flagged boolean not null default false;
 alter table reports add column if not exists ngo_manual_requested boolean not null default false;
 

@@ -8,9 +8,6 @@ if (!url || !key) {
   console.warn('[supabase] SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — backend cannot read/write the database until these are configured.');
 }
 
-// Node < 22 has no native WebSocket global, which the realtime-js
-// sub-client requires even though this backend never opens a realtime
-// channel itself (only the browser client does, where WebSocket is native).
 const supabase = url && key
   ? createClient(url, key, { auth: { persistSession: false }, realtime: { transport: WebSocket } })
   : null;

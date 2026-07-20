@@ -7,11 +7,6 @@ function generateCode() {
   return String(crypto.randomInt(100000, 1000000));
 }
 
-/**
- * Verifies a citizen-submitted 6-digit code against a report row, with
- * brute-force protection: after MAX_ATTEMPTS wrong guesses the report locks
- * for LOCK_MINUTES. Persists the attempt/lock state back to Supabase.
- */
 async function verifyAndConsumeCode(supabase, report, submittedCode) {
   const now = new Date();
 

@@ -17,7 +17,6 @@ const allowedOrigins = (process.env.CORS_ORIGIN || '')
 
 app.use(cors({
   origin(origin, callback) {
-    // allow no-origin requests (curl, server-to-server, mobile webviews)
     if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
@@ -48,7 +47,6 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Not found' });
 });
 
-// eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.status || 500).json({ error: err.message || 'Internal server error' });
