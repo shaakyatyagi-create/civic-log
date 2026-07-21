@@ -339,6 +339,9 @@ footer {
 .minor-border { border-left: 8px solid var(--green); }
 .low-border { border-left: 8px solid var(--blue); }
 
+.ward-redacted { display:inline-block; background:#000; color:#000; border-radius:3px; padding:1px 10px; letter-spacing:2px; user-select:none; }
+.ward-redacted.revealed { background:transparent; color:inherit; padding:0; letter-spacing:normal; user-select:auto; }
+
 .status-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; border: 1px solid rgba(0,0,0,0.2); }
 .dot-red { background: var(--red); } .dot-yellow { background: var(--yellow); } .dot-green { background: var(--green); } .dot-blue { background: var(--blue); }
 .dot-verified { background: #3b82f6; }

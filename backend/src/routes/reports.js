@@ -229,6 +229,26 @@ router.post('/:id/status', async (req, res, next) => {
   }
 });
 
+router.post('/:id/verify-code', async (req, res, next) => {
+  try {
+    const supabase = requireSupabase();
+    const { code } = req.body || {};
+    if (!code) return res.status(400).json({ error: 'code is required.' });
+
+    const { data: report, error: fetchErr } = await supabase.from('reports').select('*').eq('id', req.params.id).single();
+    if (fetchErr || !report) return res.status(404).json({ error: 'Report not found' });
+
+    const verification = await verifyAndConsumeCode(supabase, report, code);
+    if (!verification.ok) {
+      return res.status(403).json({ error: verification.message, locked: !!verification.locked });
+    }
+
+    res.json({ ok: true, ward: report.ward });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.post('/:id/ngo-help', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
@@ -251,13 +271,24 @@ router.post('/:id/ngo-application', async (req, res, next) => {
   try {
     const supabase = requireSupabase();
     const { ngoId } = req.body || {};
-    if (!ngoId) return res.status(400).json({ error: 'ngoId is required.' });
 
     const { data: report, error: reportErr } = await supabase.from('reports').select('*').eq('id', req.params.id).single();
     if (reportErr || !report) return res.status(404).json({ error: 'Report not found' });
 
-    const { data: ngo, error: ngoErr } = await supabase.from('ngos').select('*').eq('id', ngoId).single();
-    if (ngoErr || !ngo) return res.status(404).json({ error: 'NGO not found' });
+    let ngo;
+    if (ngoId) {
+      const { data, error: ngoErr } = await supabase.from('ngos').select('*').eq('id', ngoId).single();
+      if (ngoErr || !data) return res.status(404).json({ error: 'NGO not found' });
+      ngo = data;
+    } else {
+      const { data: matches } = await supabase.from('ngos').select('*').eq('district', report.district).eq('category', report.category).limit(1);
+      ngo = matches && matches[0];
+      if (!ngo) {
+        const { data: fallback } = await supabase.from('ngos').select('*').eq('district', report.district).limit(1);
+        ngo = fallback && fallback[0];
+      }
+      if (!ngo) return res.status(404).json({ error: 'No NGO is configured for this report\'s district yet.' });
+    }
 
     const draft = await openai.generateNgoApplication(report, ngo);
 

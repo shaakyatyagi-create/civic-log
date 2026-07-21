@@ -416,7 +416,13 @@
           </div>
 
           <p style="font-size:14px; color:var(--ink); line-height:1.5;"><strong>Description:</strong> ${escapeHtml(rep.description)}</p>
-          <p style="font-size:14px; color:var(--accent-dark);"><strong>📍 Address:</strong> ${escapeHtml(rep.area)} (${escapeHtml(rep.ward)})</p>
+          <p style="font-size:14px; color:var(--accent-dark);"><strong>📍 Address:</strong> ${escapeHtml(rep.area)} (<span class="ward-redacted" id="ward-display-${rep.id}">██████</span> <button class="btn small outline" style="padding:2px 8px;font-size:10px;" data-toggle-ward-gate="${rep.id}">🔒 Unlock</button>)</p>
+          <div class="code-gate" id="ward-gate-${rep.id}" style="display:none;">
+            <strong>Enter the 6-digit code to reveal the exact ward:</strong><br>
+            <input type="text" maxlength="6" id="ward-code-${rep.id}" placeholder="000000" style="margin:10px 0;">
+            <button class="btn small" data-verify-ward="${rep.id}">Unlock</button>
+            <div id="ward-unlock-result-${rep.id}"></div>
+          </div>
           <p style="font-size:12px; color:var(--ink-soft);"><strong>Filed:</strong> ${fmtDate(rep.created_at)}${rep.resolved_at ? ` · <strong>Resolved:</strong> ${fmtDate(rep.resolved_at)}` : ''}</p>
           ${rep.image_url ? `<img src="${rep.image_url}" style="max-width:100%; border:2.5px solid var(--ink); border-radius:var(--radius-sm); margin-top:10px;" alt="Evidence">` : ''}
 
@@ -474,6 +480,36 @@
       el.addEventListener('click', () => {
         const gate = document.getElementById(`code-gate-${el.getAttribute('data-toggle-code-gate')}`);
         gate.style.display = gate.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('[data-toggle-ward-gate]').forEach((el) => {
+      el.addEventListener('click', () => {
+        const gate = document.getElementById(`ward-gate-${el.getAttribute('data-toggle-ward-gate')}`);
+        gate.style.display = gate.style.display === 'none' ? 'block' : 'none';
+      });
+    });
+
+    document.querySelectorAll('[data-verify-ward]').forEach((el) => {
+      el.addEventListener('click', async () => {
+        const id = el.getAttribute('data-verify-ward');
+        const code = document.getElementById(`ward-code-${id}`).value.trim();
+        const resultEl = document.getElementById(`ward-unlock-result-${id}`);
+        if (!code) { resultEl.innerHTML = '<p style="color:var(--red);font-size:13px;">Enter the code first.</p>'; return; }
+
+        el.disabled = true;
+        try {
+          const { ward } = await apiJson(`/api/reports/${id}/verify-code`, { method: 'POST', body: { code } });
+          const display = document.getElementById(`ward-display-${id}`);
+          display.textContent = ward;
+          display.classList.add('revealed');
+          resultEl.innerHTML = '';
+          document.getElementById(`ward-gate-${id}`).style.display = 'none';
+        } catch (err) {
+          resultEl.innerHTML = `<p style="color:var(--red);font-size:13px;">${escapeHtml(err.message)}</p>`;
+        } finally {
+          el.disabled = false;
+        }
       });
     });
 
@@ -741,17 +777,8 @@
           <div class="meta">${escapeHtml(n.district)}${n.category ? ` · ${escapeHtml(n.category)}` : ''}</div>
           <div class="meta">${n.twitter_handle ? `@${escapeHtml(n.twitter_handle)}` : ''}</div>
           <div class="meta">${n.email ? escapeHtml(n.email) : ''}</div>
-          <button class="btn small outline" style="margin-top:10px;" data-assign-ngo="${n.id}">Assign to My Issue</button>
         </div>
       `).join('') : '<p>No NGOs configured for this selection yet.</p>';
-
-      container.querySelectorAll('[data-assign-ngo]').forEach((el) => {
-        el.addEventListener('click', () => {
-          const reportId = document.getElementById('ngoAssignReportId').value.trim();
-          if (!reportId) { alert('Enter the report ID first.'); return; }
-          prepareNgoApplication(reportId, el.getAttribute('data-assign-ngo'));
-        });
-      });
     } catch (err) {
       container.innerHTML = `<p>Could not load NGOs: ${escapeHtml(err.message)}</p>`;
     }
@@ -760,11 +787,18 @@
   document.getElementById('ngoDistrictFilter').addEventListener('change', loadNgos);
   document.getElementById('ngoCategoryFilter').addEventListener('change', loadNgos);
 
+  document.getElementById('ngoAutoAssignBtn').addEventListener('click', () => {
+    const reportId = document.getElementById('ngoAssignReportId').value.trim();
+    if (!reportId) { alert('Enter the report ID first.'); return; }
+    prepareNgoApplication(reportId);
+  });
+
   async function prepareNgoApplication(reportId, ngoId) {
     const panel = document.getElementById('ngoApplicationPanel');
     panel.innerHTML = '<div class="panel"><span class="spinner"></span> Preparing application…</div>';
     try {
       const { report, ngo, draft } = await apiJson(`/api/reports/${reportId}/ngo-application`, { method: 'POST', body: { ngoId } });
+      const resolvedNgoId = ngo.id;
 
       panel.innerHTML = `
         <div class="draft-box">
@@ -790,7 +824,7 @@
           const xPost = document.getElementById('ngoAppXPost').value;
           const { notifications } = await apiJson(`/api/reports/${reportId}/ngo-application/send`, {
             method: 'POST',
-            body: { ngoId, subject, body, xPost },
+            body: { ngoId: resolvedNgoId, subject, body, xPost },
           });
           const emailNote = notifications.email.dryRun ? 'simulated (dry-run)' : (notifications.email.success ? 'sent' : `failed: ${notifications.email.error}`);
           const xNote = notifications.x.dryRun ? 'simulated (dry-run)' : (notifications.x.success ? 'posted' : `failed: ${notifications.x.error}`);
