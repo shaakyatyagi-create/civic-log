@@ -96,7 +96,7 @@ Rules:
 3. If the photo genuinely supports the claimed severity, set ai_flagged to false.
 4. ai_category_match should reflect whether the chosen category (Road/Water/Garbage/Electricity/Other) matches what's actually depicted.
 
-Write the email as a formal, respectful grievance letter addressed to the municipal authority of ${report.district}, signed by ${report.citizenName}, using the AI-assessed severity (not necessarily the citizen's original claim). Write the X post as a concise public civic-alert post (under 240 characters) that states the assessed severity, the issue, and the location — no hashtag spam, no @mentions.`,
+Write the email as a formal, respectful grievance letter addressed to the municipal authority of ${report.district}, signed by ${report.citizenName}, using the AI-assessed severity (not necessarily the citizen's original claim). The email may include the full address (area and ward). Write the X post as a concise public civic-alert post (under 240 characters) that states the assessed severity, the issue, the district, and the area/locality only — never include the ward number or exact house/street address in the X post, only the email should have the precise address. No hashtag spam, no @mentions.`,
     },
   ];
 
@@ -198,7 +198,7 @@ async function generateNgoApplication(report, ngo) {
       { role: 'system', content: 'You write formal, respectful outreach letters and short public X posts asking a specific NGO to support a specific civic grievance. Respond using the provided JSON schema.' },
       {
         role: 'user',
-        content: `Write a formal application email addressed to "${ngo.name}" asking them to support this unresolved civic issue, and a short public X post (under 240 chars) announcing that this NGO has been asked to help.
+        content: `Write a formal application email addressed to "${ngo.name}" asking them to support this unresolved civic issue, and a short public X post (under 240 chars) announcing that this NGO has been asked to help. The email may include the full address (area and ward). The X post must only mention the district and the area/locality — never include the ward number or exact house/street address in the X post, only the email should have the precise address.
 
 Report #${report.id}
 Title: ${report.title}
